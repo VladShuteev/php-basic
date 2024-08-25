@@ -8,7 +8,7 @@ class WebhookController extends Controller
 {
     public function actionProcess()
     {
-        return "IGQWROQy0xbDlLYjRTR1UwTVhaSmRTYVNxM3JpVWh6cGt4dWNBb1hDRHd0dXFaY2MxWEVkVzJtNkFGYmFrYUE4bTRwVmV0cThYeFJVVzgwZAEwwRGpDa2ZABZAGhPUFptTmdiZAW4wNFRDS1ZAyVklCaWhfalREN1dReEkZD";
+        return "test";
     }
 
 }
