@@ -2,6 +2,7 @@
 
 namespace app\controllers;
 
+use app\models\entities\Webhook;
 use Yii;
 use yii\filters\VerbFilter;
 use yii\web\Controller;
@@ -56,13 +57,15 @@ class WebhookController extends Controller
     {
         $data = Yii::$app->request->post();
 
-        // Логируем данные для отладки (не забудьте удалить это на продакшене)
         Yii::info('Webhook received: ' . json_encode($data));
 
-        // Здесь добавьте логику обработки полученных данных
-        // Например, запись в базу данных, отправка уведомлений и т.д.
+        $model = new Webhook();
+        $model->data = json_encode($data);
+        if (!$model->save()) {
+            Yii::$app->response->statusCode = 400;
+            return 'Problem with webhook processing';
+        }
 
-        // Возвращаем успешный ответ
         Yii::$app->response->statusCode = 200;
         return 'EVENT_RECEIVED';
     }
