@@ -57,10 +57,13 @@ class WebhookController extends Controller
     {
         $data = Yii::$app->request->post();
 
-        Yii::info('Webhook received: ' . json_encode($data));
+        if (empty($data)) {
+            Yii::$app->response->statusCode = 400;
+            return 'Invalid webhook payload';
+        }
 
         $model = new Webhook();
-        $model->data = json_encode($data);
+        $model->data = $data;
         if (!$model->save()) {
             Yii::$app->response->statusCode = 400;
             return 'Problem with webhook processing';
