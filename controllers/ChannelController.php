@@ -26,9 +26,9 @@ class ChannelController extends Controller
     public function behaviors()
     {
         return [
-            'authenticator' => [
-                'class' => JwtAuthFilter::class,
-            ],
+//            'authenticator' => [
+//                'class' => JwtAuthFilter::class,
+//            ],
             'contentNegotiator' => [
                 'class' => ContentNegotiator::class,
                 'formats' => [
