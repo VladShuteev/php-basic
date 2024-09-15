@@ -57,7 +57,7 @@ class WebhookController extends Controller
         $data = Yii::$app->request->post();
 
         // Логируем данные для отладки (не забудьте удалить это на продакшене)
-        Yii::error('Webhook received: ' . json_encode($data));
+        Yii::info('Webhook received: ' . json_encode($data));
 
         // Здесь добавьте логику обработки полученных данных
         // Например, запись в базу данных, отправка уведомлений и т.д.

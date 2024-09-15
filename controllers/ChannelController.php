@@ -79,6 +79,9 @@ class ChannelController extends Controller
                 return ['status' => 'error', 'errors' => $channel->getErrors()];
             }
 
+//            Нужна транзакция
+            $this->instagramService->webhookSubscribe($profile['id'], $token);
+
             return ['status' => 'success', 'profile' => $profile];
         } catch (\Exception $e) {
             throw new HttpException(400, $e->getMessage());
