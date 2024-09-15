@@ -12,15 +12,26 @@ $config = [
         '@npm'   => '@vendor/npm-asset',
     ],
     'components' => [
+        'session' => [
+            'class' => 'yii\web\Session',
+            'timeout' => 3600,
+            'cookieParams' => [
+                'lifetime' => 3600,
+            ],
+        ],
         'request' => [
             // !!! insert a secret key in the following (if it is empty) - this is required by cookie validation
             'cookieValidationKey' => 'P3tqWZWpoOXnf1JkxvIJcOii6BMPBWSZ',
+            'enableCsrfValidation' => false,
+            'parsers' => [
+                'application/json' => 'yii\web\JsonParser',
+            ],
         ],
         'cache' => [
             'class' => 'yii\caching\FileCache',
         ],
         'user' => [
-            'identityClass' => 'app\models\User',
+            'identityClass' => 'app\models\entities\User',
             'enableAutoLogin' => true,
         ],
         'errorHandler' => [
@@ -47,6 +58,17 @@ $config = [
             'showScriptName' => false,
             'rules' => [
             ],
+        ],
+    ],
+    'as corsFilter' => [
+        'class' => \yii\filters\Cors::class,
+        'cors' => [
+            'Origin' => ['http://localhost:3000'],
+            'Access-Control-Allow-Credentials' => true,
+            'Access-Control-Request-Method' => ['POST', 'GET', 'OPTIONS'],
+            'Access-Control-Allow-Headers' => ['Content-Type', 'Authorization'],
+            'Access-Control-Expose-Headers' => ['Content-Length', 'X-Kuma-Revision'],
+            'Access-Control-Max-Age' => 3600,
         ],
     ],
     'params' => $params,

@@ -3,18 +3,40 @@
 namespace app\controllers;
 
 use Yii;
+use yii\filters\VerbFilter;
 use yii\web\Controller;
 use yii\web\Response;
 
 class WebhookController extends Controller
 {
-    // Отключаем защиту CSRF для этого контроллера, так как Instagram отправляет POST-запросы без CSRF-токена
-    public $enableCsrfValidation = false;
+    public function behaviors()
+    {
+        return [
+            'corsFilter' => [
+                'class' => \yii\filters\Cors::class,
+            ],
+            'verbs' => [
+                'class' => VerbFilter::class,
+                'actions' => [
+                    'index' => ['GET', 'POST'],
+                ],
+            ],
+        ];
+    }
 
-    /**
-     * Метод для верификации Webhook
-     */
-    public function actionVerify()
+    public function actionIndex()
+    {
+        if (Yii::$app->request->isGet) {
+            return $this->verify();
+        }
+
+        if (Yii::$app->request->isPost) {
+            return $this->receive();
+        }
+
+    }
+
+    private function verify()
     {
         $request = Yii::$app->request;
 
@@ -23,24 +45,16 @@ class WebhookController extends Controller
         $hubChallenge = $request->get('hub_challenge');
         $hubVerifyToken = $request->get('hub_verify_token');
 
-        // Проверяем, совпадает ли переданный токен с нашим
         if ($hubMode === 'subscribe' && $hubVerifyToken === Yii::$app->params['instagramWebhookVerifyToken']) {
-            // Возвращаем challenge для подтверждения
             return $hubChallenge;
         }
 
         return 'Verification token mismatch';
     }
 
-    /**
-     * Метод для обработки событий Webhook
-     */
-    public function actionReceive()
+    private function receive()
     {
-        $request = Yii::$app->request;
-
-        // Получаем входящие данные
-        $data = $request->post();
+        $data = Yii::$app->request->post();
 
         // Логируем данные для отладки (не забудьте удалить это на продакшене)
         Yii::error('Webhook received: ' . json_encode($data));
