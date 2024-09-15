@@ -55,21 +55,24 @@ class WebhookController extends Controller
 
     private function receive()
     {
+        // Получаем данные из POST-запроса (JSON-данные)
         $data = Yii::$app->request->post();
 
-        if (empty($data)) {
-            Yii::$app->response->statusCode = 400;
-            return 'Invalid webhook payload';
-        }
+        // Логируем данные для отладки
+        Yii::info('Webhook received: ' . json_encode($data), __METHOD__);
 
-        $model = new Webhook();
-        $model->data = $data;
-        if (!$model->save()) {
-            Yii::$app->response->statusCode = 400;
-            return 'Problem with webhook processing';
-        }
+        // Создаем экземпляр модели Webhook
+        $webhook = new Webhook();
+        $webhook->data = json_encode($data); // Сохраняем JSON данные в поле data
 
-        Yii::$app->response->statusCode = 200;
-        return 'EVENT_RECEIVED';
+        // Пытаемся сохранить модель
+        if ($webhook->save()) {
+            Yii::$app->response->statusCode = 200; // Устанавливаем статус успешного ответа
+            return ['status' => 'success', 'message' => 'Webhook data saved successfully'];
+        } else {
+            Yii::error('Failed to save webhook: ' . json_encode($webhook->getErrors()), __METHOD__);
+            Yii::$app->response->statusCode = 400; // Устанавливаем статус ошибки
+            return ['status' => 'error', 'message' => 'Failed to save webhook data'];
+        }
     }
 }
