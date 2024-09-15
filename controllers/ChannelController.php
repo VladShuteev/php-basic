@@ -8,7 +8,6 @@ use app\services\InstagramService;
 use Yii;
 use yii\filters\ContentNegotiator;
 use yii\filters\VerbFilter;
-use yii\mutex\RetryAcquireTrait;
 use yii\web\Controller;
 use yii\web\HttpException;
 use yii\web\Response;
@@ -27,9 +26,9 @@ class ChannelController extends Controller
     public function behaviors()
     {
         return [
-            'authenticator' => [
-                'class' => JwtAuthFilter::class,
-            ],
+//            'authenticator' => [
+//                'class' => JwtAuthFilter::class,
+//            ],
             'contentNegotiator' => [
                 'class' => ContentNegotiator::class,
                 'formats' => [
@@ -51,6 +50,8 @@ class ChannelController extends Controller
         $accountId = Yii::$app->request->get('account_id');
 //        Потом для списка обработать
         $channel = Channel::find()->where(['account_id' => $accountId])->one();
+
+        Yii::info('Channel ----->: ' . $channel, __METHOD__);
 
         if (!$channel) {
             return null;
