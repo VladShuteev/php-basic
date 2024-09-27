@@ -3,10 +3,12 @@
 namespace app\filters;
 
 use app\models\entities\User;
+use app\services\JwtTokenService;
 use Yii;
 use yii\filters\auth\AuthMethod;
 
-class JwtAuthFilter extends AuthMethod {
+class JwtAuthFilter extends AuthMethod
+{
 
     public function authenticate($user, $request, $response)
     {
@@ -14,8 +16,7 @@ class JwtAuthFilter extends AuthMethod {
 
         if ($jwtToken) {
             try {
-                $decoded = User::validateJwtToken($jwtToken);
-
+                $decoded = JwtTokenService::validate($jwtToken);
                 $userData = (array) $decoded->data;
 
                 $identity = User::findOne($userData['userId']);
@@ -35,8 +36,9 @@ class JwtAuthFilter extends AuthMethod {
         return null;
     }
 
-//    Сейчас выдает 500, а должен 401
-    public function challenge($response) {
+    //    Сейчас выдает 500, а должен 401
+    public function challenge($response)
+    {
         $response->setStatusCode(401);
         $response->data = ['status' => 'error', 'message' => 'Unauthorized'];
     }

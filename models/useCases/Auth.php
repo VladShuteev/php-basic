@@ -2,15 +2,18 @@
 
 namespace app\models\useCases;
 
+use app\services\PasswordHashService;
 use yii\base\Exception;
 use yii\base\Model;
 use \app\models\entities\User;
 
-class Auth extends Model {
-    public $email;
-    public $password;
+class Auth extends Model
+{
+    public string $email;
+    public string $password;
 
-    public function rules() {
+    public function rules()
+    {
         return [
             [['email', 'password'], 'required'],
             ['email', 'email'],
@@ -19,14 +22,15 @@ class Auth extends Model {
         ];
     }
 
-    public function login() {
+    public function login(): User
+    {
         $user = User::findOne(['email' => $this->email]);
 
         if (!$user) {
             throw new Exception('User not found');
         }
 
-        if (!$user->validatePassword($this->password)) {
+        if (!PasswordHashService::validate($this->password, $user->password_hash)) {
             throw new Exception('Wrong password');
         }
 

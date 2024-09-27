@@ -12,8 +12,8 @@ use yii\db\ActiveRecord;
  * @property string $avatar
  * @property int $created_at
  */
-class Account extends ActiveRecord {
-
+class Account extends ActiveRecord
+{
     public function rules()
     {
         return [

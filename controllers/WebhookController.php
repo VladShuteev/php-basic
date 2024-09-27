@@ -58,16 +58,16 @@ class WebhookController extends Controller
 
         Yii::info('Webhook received: ' . json_encode($data), __METHOD__);
 
-//        $webhook = new Webhook();
-//        $webhook->data = json_encode($data); // Сохраняем JSON данные в поле data
+        //        $webhook = new Webhook();
+        //        $webhook->data = json_encode($data);
 
-//        if ($webhook->save()) {
-            Yii::$app->response->statusCode = 200; // Устанавливаем статус успешного ответа
-            return ['status' => 'success', 'message' => 'Webhook data saved successfully'];
-//        } else {
-//            Yii::error('Failed to save webhook: ' . json_encode($webhook->getErrors()), __METHOD__);
-//            Yii::$app->response->statusCode = 400; // Устанавливаем статус ошибки
-//            return ['status' => 'error', 'message' => 'Failed to save webhook data'];
-//        }
+        //        if ($webhook->save()) {
+        Yii::$app->response->statusCode = 200;
+        return ['status' => 'success', 'message' => 'Webhook data saved successfully'];
+        //        } else {
+        //            Yii::error('Failed to save webhook: ' . json_encode($webhook->getErrors()), __METHOD__);
+        //            Yii::$app->response->statusCode = 400;
+        //            return ['status' => 'error', 'message' => 'Failed to save webhook data'];
+        //        }
     }
 }

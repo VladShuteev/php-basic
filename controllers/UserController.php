@@ -4,7 +4,9 @@ namespace app\controllers;
 
 use app\models\useCases\Auth;
 use app\models\useCases\SignUp;
+use app\services\JwtTokenService;
 use Yii;
+use yii\base\InvalidConfigException;
 use yii\filters\ContentNegotiator;
 use yii\filters\VerbFilter;
 use yii\web\Controller;
@@ -12,7 +14,8 @@ use yii\web\Cookie;
 use yii\web\HttpException;
 use yii\web\Response;
 
-class UserController extends Controller {
+class UserController extends Controller
+{
     public function behaviors()
     {
         return [
@@ -32,20 +35,26 @@ class UserController extends Controller {
         ];
     }
 
-    public function actionLogin() {
+    /**
+     * @return array{status: string, message: string}
+     *
+     * @throws HttpException
+     * @throws InvalidConfigException
+     */
+    public function actionLogin()
+    {
         $model = new Auth();
         $model->load(Yii::$app->request->getBodyParams(), '');
 
         try {
             $user = $model->login();
 
-            $token = $user->generateJwtToken();
+            $token = JwtTokenService::generate($user);
 
             Yii::$app->response->cookies->add(new Cookie([
                 'name' => 'token',
                 'value' => $token,
                 'httpOnly' => true,
-//                'sameSite' => 'None',
                 'expire' => time() + (60 * 60),  // 1 час
             ]));
 
@@ -55,7 +64,14 @@ class UserController extends Controller {
         }
     }
 
-    public function actionRegister() {
+    /**
+     * @return array{status: string, message: string, id: int}
+     *
+     * @throws HttpException
+     * @throws InvalidConfigException
+     */
+    public function actionRegister()
+    {
         $model = new SignUp();
         $model->load(Yii::$app->request->getBodyParams(), '');
 

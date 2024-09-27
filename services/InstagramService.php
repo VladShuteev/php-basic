@@ -2,6 +2,7 @@
 
 namespace app\services;
 
+use GuzzleHttp\Exception\GuzzleException;
 use Yii;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\RequestException;
@@ -9,7 +10,7 @@ use yii\web\HttpException;
 
 class InstagramService
 {
-    private $client;
+    private Client $client;
 
     public function __construct()
     {
@@ -17,16 +18,16 @@ class InstagramService
         $this->client = new Client(['base_uri' => $baseUri]);
     }
 
-    /**
-     * @param string $accessToken
-     *
-     * @return array{id: int, username: string, profile_picture_url: string} | null
-     *
-     * @throws \yii\web\HttpException
-     */
-    public function getProfile($accessToken)
+    public function getProfile(string $accessToken): ?array
     {
+        $cacheKey = 'getProfile' . md5($accessToken);
         $url = '/me?fields=id,username,profile_picture_url&access_token=' . $accessToken;
+
+        $cachedProfile = Yii::$app->cache->get($cacheKey);
+        if ($cachedProfile) {
+            Yii::info('Profile data retrieved from cache.', __METHOD__);
+            return $cachedProfile;
+        }
 
         try {
             Yii::info('Request URL: ' . $url, __METHOD__);
@@ -36,13 +37,16 @@ class InstagramService
             Yii::info('Response status: ' . $response->getStatusCode(), __METHOD__);
             Yii::info('Response body: ' . $response->getBody(), __METHOD__);
 
-            return json_decode($response->getBody(), true);
+            $response = json_decode($response->getBody(), true);
+            Yii::$app->cache->set($cacheKey, $response, 3600);
+
+            return $response;
         } catch (RequestException $e) {
             throw new HttpException(500, $e->getMessage());
         }
     }
 
-    public function webhookSubscribe($userId, $accessToken)
+    public function webhookSubscribe(int $userId, string $accessToken)
     {
         $url = '/' . $userId . '/subscribed_apps';
 

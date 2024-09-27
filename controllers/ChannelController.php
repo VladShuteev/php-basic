@@ -5,6 +5,7 @@ namespace app\controllers;
 use app\filters\JwtAuthFilter;
 use app\models\entities\Channel;
 use app\services\InstagramService;
+use GuzzleHttp\Exception\GuzzleException;
 use Yii;
 use yii\filters\ContentNegotiator;
 use yii\filters\VerbFilter;
@@ -14,7 +15,7 @@ use yii\web\Response;
 
 class ChannelController extends Controller
 {
-    private  $instagramService;
+    private $instagramService;
 
     public function __construct($id, $module, $config = [])
     {
@@ -45,10 +46,11 @@ class ChannelController extends Controller
         ];
     }
 
-//    Выглядит не очень безопасно, даже учитывая что это проходит аутентификацию
-    public function actionProfile() {
+    //    Нужно добавить проверку что запрашиваемый аккаунт есть у user
+    public function actionProfile()
+    {
         $accountId = Yii::$app->request->get('account_id');
-//        Потом для списка обработать
+        //        Потом для списка обработать
         $channel = Channel::find()->where(['account_id' => $accountId])->one();
 
         if (!$channel) {
@@ -58,8 +60,14 @@ class ChannelController extends Controller
         return $this->instagramService->getProfile($channel->token);
     }
 
-//    А что если у меня появится FBService как мне их обрабатывать правильно?
-    public function actionConnect() {
+    //    А что если у меня появится FBService как мне их обрабатывать правильно?
+
+    /**
+     * @throws GuzzleException
+     * @throws HttpException
+     */
+    public function actionConnect()
+    {
         $token = Yii::$app->request->post('token');
         $accountId = Yii::$app->request->post('accountId');
 
@@ -78,13 +86,12 @@ class ChannelController extends Controller
                 return ['status' => 'error', 'errors' => $channel->getErrors()];
             }
 
-//            Нужна транзакция
+            //            Нужна транзакция
             $this->instagramService->webhookSubscribe($profile['id'], $token);
 
             return ['status' => 'success', 'profile' => $profile];
         } catch (\Exception $e) {
             throw new HttpException(400, $e->getMessage());
         }
-
     }
 }

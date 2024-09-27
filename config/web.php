@@ -27,8 +27,19 @@ $config = [
                 'application/json' => 'yii\web\JsonParser',
             ],
         ],
+        'redis' => [
+            'class' => 'yii\redis\Connection',
+            'hostname' => 'localhost',
+            'port' => 6379,
+            'database' => 0,
+        ],
         'cache' => [
-            'class' => 'yii\caching\FileCache',
+            'class' => 'yii\redis\Cache',
+            'redis' => [
+                'hostname' => 'localhost',
+                'port' => 6379,
+                'database' => 1,
+            ],
         ],
         'user' => [
             'identityClass' => 'app\models\entities\User',
@@ -66,7 +77,7 @@ $config = [
         'cors' => [
             'Origin' => ['http://localhost:3000'],
             'Access-Control-Allow-Credentials' => true,
-            'Access-Control-Request-Method' => ['POST', 'GET', 'OPTIONS'],
+            'Access-Control-Request-Method' => ['POST', 'GET', 'DELETE', 'OPTIONS', 'PUT', 'PATCH'],
             'Access-Control-Allow-Headers' => ['Content-Type', 'Authorization'],
             'Access-Control-Expose-Headers' => ['Content-Length', 'X-Kuma-Revision'],
             'Access-Control-Max-Age' => 3600,

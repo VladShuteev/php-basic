@@ -8,11 +8,11 @@ use yii\db\ActiveRecord;
 // особенно если там есть лимиты и потом по cron обновлять данные по
 // аккаунту
 /**
- * @property integer $id
- * @property integer $account_id
+ * @property int $id
+ * @property int $account_id
  * @property string $token
  * @property int $created_at
  */
-class Channel extends ActiveRecord {
-
+class Channel extends ActiveRecord
+{
 }

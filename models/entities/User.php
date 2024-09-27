@@ -13,7 +13,9 @@ use yii\web\IdentityInterface;
  * @property string $email
  * @property string $password_hash
  */
-class User extends ActiveRecord implements IdentityInterface {
+class User extends ActiveRecord implements IdentityInterface
+{
+    
     public function rules()
     {
         return [
@@ -24,12 +26,12 @@ class User extends ActiveRecord implements IdentityInterface {
 
     public static function findIdentity($id)
     {
-        return User::findOne($id);
+        return self::findOne($id);
     }
 
     public static function findIdentityByAccessToken($token, $type = null)
     {
-        return null;  // Для JWT это может быть не нужно
+        return null;
     }
 
     public function getId()
@@ -45,36 +47,5 @@ class User extends ActiveRecord implements IdentityInterface {
     public function validateAuthKey($authKey)
     {
         return true;
-    }
-
-    public static function validateJwtToken($token) {
-        $secretKey = Yii::$app->params['jwtSecretKey'];
-
-        return JWT::decode($token, new Key($secretKey, 'HS256'));
-    }
-
-    public function generateJwtToken() {
-        $secretKey = Yii::$app->params['jwtSecretKey'];
-        $payload = [
-            'iss' => 'mini_manychat',
-            'aud' => 'web',
-            'iat' => time(),
-            'exp' => time() + (60 * 60),  // 1 час
-            'data' => [
-                'userId' => $this->id,
-                'email' => $this->email,
-            ],
-        ];
-
-        return JWT::encode($payload, $secretKey, 'HS256');
-    }
-
-
-    public function setPassword($password) {
-        $this->password_hash = Yii::$app->getSecurity()->generatePasswordHash($password);
-    }
-
-    public function validatePassword($password) {
-        return Yii::$app->getSecurity()->validatePassword($password, $this->password_hash);
     }
 }

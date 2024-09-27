@@ -9,7 +9,4 @@ use yii\db\ActiveRecord;
  * @property string $data
  * @property int $created_at
  */
-class Webhook extends ActiveRecord
-{
-
-}
+class Webhook extends ActiveRecord {}

@@ -21,8 +21,8 @@ class LogController extends Controller
             Yii::$app->response->headers->add('Content-Type', 'text/plain');
 
             return $reversedLogs;
-        } else {
-            return 'Log file not found';
         }
+
+        return 'Log file not found';
     }
 }
