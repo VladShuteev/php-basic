@@ -67,8 +67,34 @@ class InstagramService
         }
     }
 
-    public function sendMessage($message, $recipientId)
+    public function sendMessage(string $message, string $recipientId, string $accessToken)
     {
-        Yii::info('Send Message: ' . $message . 'to' . $recipientId, __METHOD__);
+        $url = '/me/messages';
+
+        try {
+            Yii::info('Request URL: ' . $url, __METHOD__);
+
+            $response = $this->client->post($url, [
+                'query' => [
+                    'access_token' => $accessToken,
+                ],
+                'json' => [
+                    'recipient' => [
+                        'id' => $recipientId,
+                    ],
+                    'message' => [
+                        'text' => $message,
+                    ],
+                ],
+            ]);
+
+            Yii::info('Response status: ' . $response->getStatusCode(), __METHOD__);
+            Yii::info('Response body: ' . $response->getBody(), __METHOD__);
+
+            return json_decode($response->getBody(), true);
+        } catch (RequestException $e) {
+            Yii::error('Error sending message: ' . $e->getMessage(), __METHOD__);
+            throw new HttpException(500, $e->getMessage());
+        }
     }
 }

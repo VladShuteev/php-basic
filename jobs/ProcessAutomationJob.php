@@ -17,6 +17,7 @@ class ProcessAutomationJob extends BaseObject implements JobInterface
     public $contentId = null;
     //    Не нравится, что нужно прокидывать сюда, лучше будет прокидывать Instagram Service
     public $recipientId;
+    public $channelToken;
 
     public function execute($queue)
     {
@@ -50,7 +51,7 @@ class ProcessAutomationJob extends BaseObject implements JobInterface
                 $instagramService = new InstagramService();
                 $message = $content->contentText->content;
 
-                $instagramService->sendMessage($message, $this->recipientId);
+                $instagramService->sendMessage($message, $this->recipientId, $this->channelToken);
             }
                 break;
             case ContentType::DELAY->value: {
@@ -59,18 +60,22 @@ class ProcessAutomationJob extends BaseObject implements JobInterface
                         'automationId' => $this->automationId,
                         'contentId' => $content->next_content_id,
                         'recipientId' => $this->recipientId,
+                        'channelToken' => $this->channelToken,
                     ]));
                 }
                 return;
             }
-                break;
         }
 
         if ($content->next_content_id) {
-            Yii::$app->queue->push(new ProcessAutomationJob([
-                'automationId' => $this->automationId,
-                'contentId' => $content->next_content_id,
-            ]));
+            Yii::$app->queue->push(new ProcessAutomationJob(
+                [
+                    'automationId' => $this->automationId,
+                    'contentId' => $content->next_content_id,
+                    'recipientId' => $this->recipientId,
+                    'channelToken' => $this->channelToken,
+                ]
+            ));
         }
     }
 }

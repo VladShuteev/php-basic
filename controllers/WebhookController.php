@@ -62,10 +62,11 @@ class WebhookController extends Controller
         $parsedData = json_encode($data);
 
         //        TODO: [0] хак, убрать
-        if (isset($parsedData['entry']['messaging'][0]['message']['text'])) {
-            $message = $parsedData['entry']['messaging'][0]['message']['text'];
-            $recipientId = $parsedData['entry']['messaging'][0]['sender']['id'];
-            ProcessingService::processMessage($message, $recipientId);
+        if (isset($parsedData['entry'][0]['messaging'][0]['message']['text'])) {
+            $message = $parsedData['entry'][0]['messaging'][0]['message']['text'];
+            $recipientId = $parsedData['entry'][0]['messaging'][0]['sender']['id'];
+            $metaId = $parsedData['entry'][0]['id'];
+            ProcessingService::processMessage($message, $recipientId, $metaId);
         }
 
         Yii::$app->response->statusCode = 200;

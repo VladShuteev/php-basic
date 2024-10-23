@@ -78,9 +78,12 @@ class ChannelController extends Controller
 
             $profile = $this->instagramService->getProfile($token);
 
+
             if (!$profile) {
                 return ['status' => 'error', 'errors' => 'profile not found'];
             }
+
+            $channel->meta_id = $profile['id'];
 
             if (!$channel->save()) {
                 return ['status' => 'error', 'errors' => $channel->getErrors()];

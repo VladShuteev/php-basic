@@ -10,6 +10,7 @@ use yii\db\ActiveRecord;
 /**
  * @property int $id
  * @property int $account_id
+ * @property string $meta_id
  * @property string $token
  * @property int $created_at
  */
