@@ -6,6 +6,7 @@ use app\services\PasswordHashService;
 use yii\base\Exception;
 use yii\base\Model;
 use \app\models\entities\User;
+use yii\web\NotFoundHttpException;
 
 class Auth extends Model
 {
@@ -27,7 +28,7 @@ class Auth extends Model
         $user = User::findOne(['email' => $this->email]);
 
         if (!$user) {
-            throw new Exception('User not found');
+            throw new NotFoundHttpException('User not found');
         }
 
         if (!PasswordHashService::validate($this->password, $user->password_hash)) {

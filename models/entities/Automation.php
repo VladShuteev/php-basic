@@ -7,13 +7,13 @@ use Yii;
 use yii\db\ActiveRecord;
 use yii\db\Exception;
 use yii\helpers\ArrayHelper;
+use yii\web\NotFoundHttpException;
 
 /**
  * @property int $id
  * @property int $account_id
  * @property string $name
- * Это вообще JSON, нет ли более строгого типа для Active Record?
- * @property string $content
+ * @property string $content_id
  * @property int $created_at
  */
 class Automation extends ActiveRecord
@@ -48,7 +48,6 @@ class Automation extends ActiveRecord
             if (!$trigger->save()) {
                 throw new Exception($trigger->errors);
             }
-            //            Создавать контент
 
             $transaction->commit();
 
@@ -66,14 +65,11 @@ class Automation extends ActiveRecord
         //      Посмотреть как профилировать запросы к базе данных
         return self::find()
             ->where(['account_id' => $accountId])
-            ->with([
-               'trigger' => function ($query) {
-                   $query->asArray();
-               },
-               'contents' => function ($query) {
-                   $query->asArray();
-               },
-           ])
+            ->with(
+                'trigger',
+                'activeContents.contentText',
+                'activeContents.contentDelay'
+            )
             ->asArray()
             ->all();
     }
@@ -85,11 +81,15 @@ class Automation extends ActiveRecord
 
             $automation = self::find()
                 ->where(['id' => $automationId])
-                ->with(['trigger', 'contents.contentText', 'contents.contentDelay'])
+                ->with(
+                    'trigger',
+                    'activeContents.contentText',
+                    'activeContents.contentDelay'
+                )
                 ->one();
 
             if (!$automation) {
-                return ['status' => 'error', 'message' => 'Automation not found'];
+                throw new NotFoundHttpException('Automation not found');
             }
 
             if (isset($changes['name'])) {
@@ -104,32 +104,77 @@ class Automation extends ActiveRecord
             }
 
             if (isset($changes['content'])) {
-                //                Мне нужно найти в массиве Automation->contents id контента, если его там нет,
-                //                то создать новый
-                $findedContent = null;
-                foreach ($automation->contents as $content) {
+                $foundContent = null;
+                //                N+1??
+                foreach ($automation->activeContents as $content) {
                     if ($changes['content']['id'] == $content['id']) {
-                        $findedContent = $content;
+                        $foundContent = $content;
                     }
                 }
 
-                if ($findedContent) {
-                    switch ($findedContent->type) {
+                if ($foundContent) {
+                    if (isset($changes['content']['isDeleted'])) {
+                        $foundContent->is_deleted = $changes['content']['isDeleted'];
+
+                        //                        На это нужны тесты
+                        if (count($automation->activeContents) == 1) {
+                            if ($automation->content_id == $foundContent->id) {
+                                $automation->content_id = null;
+                            }
+                        } else {
+                            $filteredArray = array_filter($automation->activeContents, function ($content) use ($automation) {
+                                return $content->id === $automation->content_id;
+                            });
+                            $cursor = array_pop($filteredArray);
+
+                            //                            Если в начале списка
+                            if ($cursor->id === $foundContent->id) {
+                                $automation->content_id = $cursor->next_content_id;
+                            } else {
+                                while ($cursor->next_content_id != null) {
+                                    $filteredArray = array_filter($automation->activeContents, function ($content) use ($cursor) {
+                                        return $cursor->next_content_id === $content->id;
+                                    });
+                                    $prevCursor = $cursor;
+                                    $cursor = array_pop($filteredArray);
+                                    if ($cursor->id === $foundContent->id) {
+                                        if ($cursor->next_content_id != null) {
+                                            //                            Если в середине списка
+                                            $prevCursor->next_content_id = $cursor->next_content_id;
+                                            $cursor->next_content_id = null;
+                                        } else {
+                                            //                            Если в конце списка
+                                            $prevCursor->next_content_id = null;
+                                        }
+                                    }
+                                    $prevCursor->save();
+                                }
+
+
+
+                            }
+
+                            $cursor->save();
+                        }
+                    }
+                    switch ($foundContent->type) {
                         case ContentType::TEXT->value: {
                             if (isset($changes['content']['content'])) {
-                                $findedContent->contentText->content = $changes['content']['content'];
-                                $findedContent->contentText->save();
+                                $foundContent->contentText->content = $changes['content']['content'];
+                                $foundContent->contentText->save();
                             }
                         }
                             break;
                         case ContentType::DELAY->value: {
                             if (isset($changes['content']['duration'])) {
-                                $findedContent->contentDelay->duration = $changes['content']['duration'];
-                                $findedContent->contentDelay->save();
+                                $foundContent->contentDelay->duration = $changes['content']['duration'];
+                                $foundContent->contentDelay->save();
                             }
                         }
                             break;
                     }
+
+                    $foundContent->save();
                 } else {
                     $content = new Content();
                     //                    Я не уверен, что полагаться на Id фронта можно. Как этот кейс обработать?
@@ -137,24 +182,43 @@ class Automation extends ActiveRecord
                     $content->automation_id = $automationId;
                     $content->type = $changes['content']['type'];
 
+                    if (!$automation->content_id) {
+                        $automation->content_id = $content->id;
+                    } else {
+                        $filteredArray = array_filter($automation->activeContents, function ($content) use ($automation) {
+                            return $content->id === $automation->content_id;
+                        });
+                        $cursor = array_pop($filteredArray);
+
+                        while ($cursor->next_content_id != null) {
+                            $filteredArray = array_filter($automation->activeContents, function ($content) use ($cursor) {
+                                return $content->id === $cursor->next_content_id;
+                            });
+                            $cursor = array_pop($filteredArray);
+                        }
+
+                        $cursor->next_content_id = $content->id;
+                        $cursor->save();
+                    }
+
+
                     $content->save();
 
                     switch ($changes['content']['type']) {
                         case ContentType::TEXT->value: {
                             $text = new ContentText();
-                            $text->content_id = $changes['content']['id'];
+                            $text->content_id = $content->id;
                             $text->content = $changes['content']['content'];
                             $text->save();
                         }
                             break;
                         case ContentType::DELAY->value: {
                             $delay = new ContentDelay();
-                            $delay->content_id = $changes['content']['id'];
+                            $delay->content_id = $content->id;
                             $delay->duration = $changes['content']['duration'];
                             $delay->save();
                         }
                             break;
-
                     }
 
                 }
@@ -180,10 +244,21 @@ class Automation extends ActiveRecord
 
             $automation = self::find()
                 ->where(['id' => $automationId])
-                ->with('trigger')
+                ->with(
+                    'trigger',
+                    'contents.contentText',
+                    'contents.contentDelay'
+                )
                 ->one();
 
-            //            Также удалять content
+            if (!$automation) {
+                throw new NotFoundHttpException('Automation not found');
+            }
+
+            //            Нельзя ли удалять сразу одним скоупом, не будет ли здесь проблемы N+1?
+            foreach ($automation->contents as $content) {
+                $content->delete();
+            }
             $automation->trigger->delete();
             $automation->delete();
 
@@ -203,6 +278,12 @@ class Automation extends ActiveRecord
         return $this->hasOne(Trigger::class, ['automation_id' => 'id']);
     }
 
+    public function getActiveContents()
+    {
+        return $this->hasMany(Content::class, ['automation_id' => 'id'])
+            ->alias('c')
+            ->andOnCondition(['c.is_deleted' => false]);
+    }
     public function getContents()
     {
         return $this->hasMany(Content::class, ['automation_id' => 'id']);

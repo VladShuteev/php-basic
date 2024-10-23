@@ -15,6 +15,18 @@ return [
     'language' => 'en-US',
     'components' => [
         'db' => $db,
+        'queue' => [
+            'class' => \yii\queue\redis\Queue::class,
+            'redis' => 'redis', // или настройте подключение к Redis здесь
+            'channel' => 'queue-test', // используйте отдельный канал для тестов
+            'as log' => \yii\queue\LogBehavior::class,
+        ],
+        'redis' => [
+            'class' => \yii\redis\Connection::class,
+            'hostname' => 'localhost',
+            'port' => 6379,
+            'database' => 1, // используйте отдельную базу данных Redis для тестов
+        ],
         'mailer' => [
             'class' => \yii\symfonymailer\Mailer::class,
             'viewPath' => '@app/mail',
@@ -28,19 +40,19 @@ return [
         'urlManager' => [
             'showScriptName' => true,
         ],
-        'user' => [
-            'identityClass' => 'app\models\User',
-        ],
-        'request' => [
-            'cookieValidationKey' => 'test',
-            'enableCsrfValidation' => false,
-            // but if you absolutely need it set cookie domain to localhost
-            /*
-            'csrfCookie' => [
-                'domain' => 'localhost',
-            ],
-            */
-        ],
+//        'user' => [
+//            'identityClass' => 'app\models\entities\User',
+//        ],
+//        'request' => [
+//            'cookieValidationKey' => 'test',
+//            'enableCsrfValidation' => false,
+//            // but if you absolutely need it set cookie domain to localhost
+//            /*
+//            'csrfCookie' => [
+//                'domain' => 'localhost',
+//            ],
+//            */
+//        ],
     ],
     'params' => $params,
 ];

@@ -6,7 +6,7 @@ $db = require __DIR__ . '/db.php';
 $config = [
     'id' => 'basic-console',
     'basePath' => dirname(__DIR__),
-    'bootstrap' => ['log'],
+    'bootstrap' => ['log', 'queue'],
     'controllerNamespace' => 'app\commands',
     'aliases' => [
         '@bower' => '@vendor/bower-asset',
@@ -14,8 +14,17 @@ $config = [
         '@tests' => '@app/tests',
     ],
     'components' => [
-        'cache' => [
-            'class' => 'yii\caching\FileCache',
+        'redis' => [
+            'class' => \yii\redis\Connection::class,
+            'hostname' => 'localhost',
+            'port' => 6379,
+            'database' => 0,
+        ],
+        'queue' => [
+            'class' => \yii\queue\redis\Queue::class,
+            'redis' => 'redis', // Ссылка на компонент 'redis' по имени
+            'channel' => 'queue', // Название канала очереди
+            'as log' => \yii\queue\LogBehavior::class, // Поведение для логирования
         ],
         'log' => [
             'targets' => [
@@ -28,13 +37,12 @@ $config = [
         'db' => $db,
     ],
     'params' => $params,
-    /*
     'controllerMap' => [
-        'fixture' => [ // Fixture generation command line.
-            'class' => 'yii\faker\FixtureController',
+        'queue' => [
+            'class' => \yii\queue\redis\Command::class,
+            'queue' => 'queue', // Ссылаемся на компонент 'queue'
         ],
     ],
-    */
 ];
 
 if (YII_ENV_DEV) {
@@ -48,8 +56,6 @@ if (YII_ENV_DEV) {
     $config['bootstrap'][] = 'debug';
     $config['modules']['debug'] = [
         'class' => 'yii\debug\Module',
-        // uncomment the following to add your IP if you are not connecting from localhost.
-        //'allowedIPs' => ['127.0.0.1', '::1'],
     ];
 }
 

@@ -6,4 +6,6 @@ return [
     'username' => 'postgres.rervnpwkbtjelbpvgkqb',
     'password' => 'Tim95zorgvlad210495',
     'charset' => 'utf8',
+    'enableLogging' => true,
+    'enableProfiling' => true,
 ];

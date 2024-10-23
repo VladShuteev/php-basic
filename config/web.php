@@ -41,6 +41,16 @@ $config = [
                 'database' => 1,
             ],
         ],
+        'queue' => [
+            'class' => \yii\queue\redis\Queue::class,
+            'redis' => [
+                'class' => 'yii\redis\Connection',
+                'hostname' => 'localhost',
+                'port' => 6379,
+                'database' => 0,
+            ],
+            'channel' => 'queue',
+        ],
         'user' => [
             'identityClass' => 'app\models\entities\User',
             'enableAutoLogin' => true,
@@ -61,6 +71,12 @@ $config = [
                     'class' => 'yii\log\FileTarget',
                     'levels' => ['error', 'warning', 'info'],
                     'logFile' => '@runtime/logs/app.log',
+                ],
+                [
+                    'class' => 'yii\log\FileTarget',
+                    'levels' => ['error', 'warning', 'info'],
+                    'categories' => ['yii\db\Command::execute'],
+                    'logFile' => '@runtime/logs/queries.log',
                 ],
             ],
         ],

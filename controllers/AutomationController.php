@@ -2,6 +2,7 @@
 
 namespace app\controllers;
 
+use app\enums\ContentType;
 use app\filters\JwtAuthFilter;
 use Yii;
 use yii\filters\ContentNegotiator;
@@ -75,10 +76,26 @@ class AutomationController extends Controller
             $automationId = $automation['id'];
 
             $contentsById = [];
-            if (!empty($automation['contents'])) {
-                foreach ($automation['contents'] as $content) {
-                    $contentsById[$content['id']] = $content;
+            if (!empty($automation['activeContents'])) {
+                foreach ($automation['activeContents'] as $content) {
+                    if ($content['type'] == ContentType::TEXT->value) {
+                        $contentsById[$content['id']] = [
+                            'id' => $content['id'],
+                            'type' => $content['type'],
+                            'content' => $content['contentText']['content']
+                        ];
+                    } elseif ($content['type'] == ContentType::DELAY->value) {
+                        $contentsById[$content['id']] = [
+                            'id' => $content['id'],
+                            'type' => $content['type'],
+                            'duration' => $content['contentDelay']['duration']
+                        ];
+                    } else {
+                        return ['status' => 'error', 'message' => 'This type doesnt exist'];
+                    }
                 }
+            } else {
+                $contentsById = (object)[];
             }
 
             $automationsById[$automationId] = [
@@ -93,7 +110,6 @@ class AutomationController extends Controller
         return ['status' => 'success', 'automations' => $automationsById];
     }
 
-    //  Перенести логику в модельку ActiveRecord или useCases
     public function actionCreate()
     {
         $accountId = Yii::$app->request->post('accountId');
@@ -105,13 +121,22 @@ class AutomationController extends Controller
         try {
             [$automation, $trigger] = Automation::create($accountId);
 
-            return ['status' => 'success', 'automation' => [...$automation, 'trigger' => $trigger, 'contents' => []]];
+            return [
+                'status' => 'success',
+                'automation' => [...$automation, 'trigger' => $trigger, 'contents' => (object)[]]
+            ];
         } catch (\Exception $e) {
 
             return ['status' => 'error', 'error' => $e->getMessage()];
         }
     }
 
+    //    Update триггерится на фронте на каждый символ(специально)
+    //    Например пока выполняется цепочка запросов на update, я делаю delete
+    //    У меня возникают очереди запросов, сейчас я кажется выполняю их один за одним
+    //    Мне кажется возникнуть гразяные записи в базу, когда контент уже удалили
+    //    Пока это работает синхронно, никаких пробелм, но если я как-то это распаралелю,
+    //    Как мне эту ситуацию обрабатывать?
     public function actionUpdate()
     {
         $automationId = Yii::$app->request->post('automationId');
@@ -126,15 +151,33 @@ class AutomationController extends Controller
             //            Тогда и не будет этого updateValue
             //            И просто вызываем на сущностях апдейт, но что если связи между ними нужны? Например
             //            мы гарантируем что при обновлении автоматизации должен обновиться триггер?
+            //            Получится что много логики в Controller
             [$automation, $trigger, $contents] = Automation::updateValue($automationId, $changes);
 
             $contentsById = [];
 
             foreach ($contents as $content) {
-                $contentsById[$content['id']] = $content;
+                if ($content['type'] == ContentType::TEXT->value) {
+                    $contentsById[$content['id']] = [
+                        'id' => $content['id'],
+                        'type' => $content['type'],
+                        'content' => $content['contentText']['content']
+                    ];
+                } elseif ($content['type'] == ContentType::DELAY->value) {
+                    $contentsById[$content['id']] = [
+                        'id' => $content['id'],
+                        'type' => $content['type'],
+                        'duration' => $content['contentDelay']['duration']
+                    ];
+                } else {
+                    return ['status' => 'error', 'message' => 'This type doesnt exist'];
+                }
             }
 
-            return ['status' => 'success', 'automation' => [...$automation, 'trigger' => $trigger, 'contents' => $contentsById]];
+            return [
+                'status' => 'success',
+                'automation' => [...$automation, 'trigger' => $trigger, 'contents' => $contentsById]
+            ];
         } catch (\Exception $e) {
 
             return ['status' => 'error', 'error' => $e->getMessage()];
@@ -154,6 +197,8 @@ class AutomationController extends Controller
 
             return ['status' => 'success', 'automationId' => $automation->id];
         } catch (\Exception $e) {
+
+            Yii::$app->response->statusCode = 400;
             return ['status' => 'error', 'error' => $e->getMessage()];
         }
     }

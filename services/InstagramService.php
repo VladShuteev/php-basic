@@ -65,6 +65,10 @@ class InstagramService
         } catch (RequestException $e) {
             throw new HttpException(500, $e->getMessage());
         }
+    }
 
+    public function sendMessage($message, $recipientId)
+    {
+        Yii::info('Send Message: ' . $message . 'to' . $recipientId, __METHOD__);
     }
 }
