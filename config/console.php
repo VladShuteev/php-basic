@@ -14,22 +14,13 @@ $config = [
         '@tests' => '@app/tests',
     ],
     'components' => [
-        'redis' => function () {
-            $redisUrl = getenv('REDIS_URL');
-            if (!$redisUrl) {
-                throw new \Exception('REDIS_URL environment variable is not set');
-            }
-
-            $parts = parse_url($redisUrl);
-
-            return [
-                'class' => \yii\redis\Connection::class,
-                'hostname' => $parts['host'],
-                'port' => $parts['port'],
-                'password' => isset($parts['pass']) ? $parts['pass'] : null,
-                'database' => 0,
-            ];
-        },
+        'redis' => [
+            'class' => \yii\redis\Connection::class,
+            'hostname' => getenv('REDIS_HOST') ?: 'localhost',
+            'port' => getenv('REDIS_PORT') ?: 6379,
+            'password' => getenv('REDIS_PASSWORD') ?: null,
+            'database' => 0,
+        ],
         'queue' => [
             'class' => \yii\queue\redis\Queue::class,
             'redis' => 'redis',
