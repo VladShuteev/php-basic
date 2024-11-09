@@ -34,11 +34,7 @@ $config = [
         ],
         'cache' => [
             'class' => 'yii\redis\Cache',
-            'redis' => [
-                'hostname' => 'localhost',
-                'port' => 6379,
-                'database' => 1,
-            ],
+            'redis' => 'redis'
         ],
         'queue' => [
             'class' => \yii\queue\redis\Queue::class,
