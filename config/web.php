@@ -33,7 +33,7 @@ $config = [
             'port' => getenv('REDIS_PORT') ?: 6379,
             'password' => getenv('REDIS_PASSWORD') ?: null,
             'database' => 0,
-            'useSSL' => true,
+            'useSSL' => false,
         ],
         'cache' => [
             'class' => 'yii\redis\Cache',
