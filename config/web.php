@@ -27,11 +27,22 @@ $config = [
                 'application/json' => 'yii\web\JsonParser',
             ],
         ],
-        'redis' => [
-            'class' => \yii\redis\Connection::class,
-            'dsn' => getenv('REDIS_URL'),
-            'database' => 0,
-        ],
+        'redis' => function () {
+            $redisUrl = getenv('REDIS_URL');
+            if (!$redisUrl) {
+                throw new \Exception('REDIS_URL environment variable is not set');
+            }
+
+            $parts = parse_url($redisUrl);
+
+            return [
+                'class' => \yii\redis\Connection::class,
+                'hostname' => $parts['host'],
+                'port' => $parts['port'],
+                'password' => isset($parts['pass']) ? $parts['pass'] : null,
+                'database' => 0, // Укажите базу данных, если нужно
+            ];
+        },
         'cache' => [
             'class' => 'yii\redis\Cache',
             'redis' => 'redis'
