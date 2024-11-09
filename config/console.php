@@ -16,15 +16,16 @@ $config = [
     'components' => [
         'redis' => [
             'class' => \yii\redis\Connection::class,
-            'hostname' => 'localhost',
-            'port' => 6379,
+            'hostname' => getenv('REDIS_HOST') ?: 'localhost',
+            'port' => getenv('REDIS_PORT') ?: 6379,
+            'password' => getenv('REDIS_PASSWORD') ?: null,
             'database' => 0,
         ],
         'queue' => [
             'class' => \yii\queue\redis\Queue::class,
-            'redis' => 'redis', // Ссылка на компонент 'redis' по имени
-            'channel' => 'queue', // Название канала очереди
-            'as log' => \yii\queue\LogBehavior::class, // Поведение для логирования
+            'redis' => 'redis',
+            'channel' => 'queue',
+            'as log' => \yii\queue\LogBehavior::class,
         ],
         'log' => [
             'targets' => [
@@ -40,7 +41,7 @@ $config = [
     'controllerMap' => [
         'queue' => [
             'class' => \yii\queue\redis\Command::class,
-            'queue' => 'queue', // Ссылаемся на компонент 'queue'
+            'queue' => 'queue',
         ],
     ],
 ];

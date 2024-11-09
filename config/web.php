@@ -28,9 +28,10 @@ $config = [
             ],
         ],
         'redis' => [
-            'class' => 'yii\redis\Connection',
-            'hostname' => 'localhost',
-            'port' => 6379,
+            'class' => \yii\redis\Connection::class,
+            'hostname' => getenv('REDIS_HOST') ?: 'localhost',
+            'port' => getenv('REDIS_PORT') ?: 6379,
+            'password' => getenv('REDIS_PASSWORD') ?: null,
             'database' => 0,
         ],
         'cache' => [
@@ -43,12 +44,7 @@ $config = [
         ],
         'queue' => [
             'class' => \yii\queue\redis\Queue::class,
-            'redis' => [
-                'class' => 'yii\redis\Connection',
-                'hostname' => 'localhost',
-                'port' => 6379,
-                'database' => 0,
-            ],
+            'redis' => 'redis',
             'channel' => 'queue',
         ],
         'user' => [
