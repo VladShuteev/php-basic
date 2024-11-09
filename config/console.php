@@ -15,12 +15,9 @@ $config = [
     ],
     'components' => [
         'redis' => [
-            'class' => \yii\redis\Connection::class,
-            'hostname' => getenv('REDIS_HOST') ?: 'localhost',
-            'port' => getenv('REDIS_PORT') ?: 6379,
-            'password' => getenv('REDIS_PASSWORD') ?: null,
-            'database' => 0,
-            'useSSL' => false,
+            'class' => 'yii\redis\Connection',
+            'driver' => 'predis', // Используем Predis вместо phpredis
+            'dsn' => getenv('REDIS_URL'), // Используем полный URL из переменной окружения
         ],
         'queue' => [
             'class' => \yii\queue\redis\Queue::class,
